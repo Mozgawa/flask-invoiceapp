@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+      background: url("https://labourenergy.org/wp-content/uploads/2020/04/abstract-video-network-wallpaper.jpg") no-repeat center center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+            text-align:left;
+        }
+ h2 {
+ color: #ffffff;
+   font-family: 'Crimson Text', serif;
+}
+ img {
+                width:650px;
+                height:700px;
+            }
+
+/* Create two equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 50%;
+  padding: 10px;
+
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+</head>
+<title>Python Flask File Upload Example</title>
+<body>
+<link href="https://fonts.googleapis.com/css?family=Crimson+Text|Work+Sans:400,700" rel="stylesheet">
+<h2>Aplikacja do parsowania danych z faktury</h2>
+<div class="row">
+  <div class="column">
+<!--      <div class="column" style="background-color:#4CC0BF;">-->
+    <h2>Wybierz fakturę</h2>
+    <p>{% with messages = get_flashed_messages() %}
+	  {% if messages %}
+		<ul class=flashes>
+		{% for message in messages %}
+		  <li>{{ message }}</li>
+		{% endfor %}
+		</ul>
+	  {% endif %}
+	{% endwith %}</p>
+	  <form method="post" action="/" enctype="multipart/form-data">
+    <dl>
+		<p>
+			<input type="file" name="file" autocomplete="off" required onchange="form.submit()" style="color: #ffffff; outline: 1px dotted #000;
+	outline: -webkit-focus-ring-color auto 5px; cursor: pointer; background-color: blue; display: inline-block">
+<!--            <label for="file">Choose a file</label>-->
+		</p>
+    </dl>
+<!--    <p>-->
+<!--		<input type="submit" value="Submit">-->
+<!--	</p>-->
+	<head>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+input[type=text], select, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+label {
+  padding: 12px 12px 12px 0;
+  display: inline-block;
+}
+
+input[type=submit] {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  float: right;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+
+.container {
+  border-radius: 5px;
+  background-color: #f2f2f2;
+  padding: 20px;
+}
+
+.col-25 {
+  float: left;
+  width: 25%;
+  margin-top: 6px;
+}
+
+.col-75 {
+  float: left;
+  width: 75%;
+  margin-top: 6px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .col-25, .col-75, input[type=submit] {
+    width: 100%;
+    margin-top: 0;
+  }
+}
+</style>
+</head>
+<body>
+
+<!--<h2>Craxon</h2>-->
+
+<div class="container">
+  <form action="/action_page.php">
+	<div class="row">
+    <div class="col-25">
+      <label for="fname">Numer faktury</label>
+    </div>
+    <div class="col-75">
+      <input type="text" value={{ numer }} id="nrfv" name="fakturanr" placeholder="Numer faktury..">
+    </div>
+  </div>
+  <div class="col">
+    <div class="col-25">
+      <label for="fname">Data wystawienia</label>
+    </div>
+    <div class="col-25">
+      <input type="text" value={{ data_wystawienia }} id="fname" name="firstname" placeholder="01/01/1000">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-25">
+      <label for="lname">Data sprzedaży</label>
+    </div>
+    <div class="col-25">
+      <input type="text" value="17/02/2020" id="lname" name="lastname" placeholder="01/01/1000">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-25">
+      <label for="stawka">Stawka</label>
+    </div>
+    <div class="col-75">
+        <input type="text" value="23%" id="stawka" name="stawka" placeholder="23%">
+    </div>
+  </div>
+<!--       <div class="row">-->
+<!--    <div class="col-25">-->
+<!--      <label for="country">Stawka</label>-->
+<!--    </div>-->
+<!--    <div class="col-75">-->
+<!--      <select id="country" name="country">-->
+<!--        <option value="australia">8%</option>-->
+<!--        <option value="canada">0%</option>-->
+<!--        <option value="usa">23%</option>-->
+<!--      </select>-->
+<!--    </div>-->
+<!--  </div>-->
+  <div class="row">
+    <div class="col-25">
+      <label for="subject">Sprzedawca</label>
+    </div>
+    <div class="col-75">
+      <textarea id="subject" name="subject" placeholder="Dane sprzedawcy.." style="height:100px">{{ sprzedawca }}</textarea>
+<!--              <textarea id="subject" name="subject" placeholder="B & D HOTELS Spółka Akcyjna NIP: 5220001116" style="height:100px">B & D HOTELS Spółka Akcyjna&#13;&#10;NIP: 5220001116&#13;&#10;ul. Barska 28/30&#13;&#10;02-318 Warszawa</textarea>-->
+
+    </div>
+  </div>
+	<div class="row">
+    <div class="col-25">
+      <label for="subject">Nabywca</label>
+    </div>
+    <div class="col-75">
+      <textarea id="subject2" name="subject" placeholder="Dane nabywcy.." style="height:100px">{{ nazwa }}</textarea>
+    </div>
+  </div>
+  <div class="row">
+    <input type="submit" value="Zapisz">
+  </div>
+  </form>
+</div>
+
+</body>
+</form>
+  </div>
+  <div class="column">
+<!--        <div class="column" style="background-color:#4CC0BF;">-->
+<!--    <h2>Zdjęcie</h2>-->
+    {% if filename %}
+	<div>
+		<img src="{{ url_for('display_image', filename=filename) }}" alt="" style="border-radius: 10px">
+	</div>
+{% endif %}
+  </div>
+</div>
+</body>

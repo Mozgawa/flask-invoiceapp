@@ -1,0 +1,58 @@
+Faktura nr 230Wd12020,
+Nabywca:
+Atos Global Delivery Center Polska Sp. z o.o.
+Sp.k.
+ul. Kraszewskiego 1
+85-240 Bydgoszcz PL
+NIP: 5213207288 29 1600 1793 1217 9006 0168 0000 EUR
+1020 1026 0000 1602 0312 1993
+nr ref. 350945
+Data wystawienia faktury. 17/0212020
+Data Sprzedaży 17/02/2020
+Nr rezerwacji: 186577
+Nr pokoju: 315 Przyjazd•. 171022020
+Wyjazd 2010212020
+Rezerwacja dla: Mozgawa, Mateusz, Pan
+Zewn. nr rezerwacji: 138380540
+l.p. nazwa
+towarulusługi j.m. pokój data
+1 Nocleg
+2 Nocleg
+3 Nocleg 18/02/20
+19/02/20 315
+315
+315 17/02/2020
+17/02/2020
+17/02/2020 ilość
+1
+1 cena stawka
+netto vat
+208,33
+208,33
+208,33
+Należność ogółem:
+formy płatności:
+Karta płatnicza pln
+Wpłacono ogółem: 675,00zł
+675,00zł
+675,00zł VAT 8% wartość
+netto
+208,33
+208,33
+208,33
+625,00
+625,00 wartość
+podatku
+16,67
+16,67
+16,67
+50,00
+50,00 wartość
+brutto
+225,00
+225,00
+225,00
+675,00
+675,00
+675,00
+Podpis osoby upoważnionej
