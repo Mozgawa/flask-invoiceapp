@@ -1,9 +1,10 @@
-# from itertools import islice
+from itertools import islice
 import re
-from parsed_dict import ApiClient, Wyniki, Podmiot, Adres, Kwota, Stawka
-import jsonpickle
 import os
-import json
+import jsonpickle
+# import json
+import nltk
+from parsed_dict import ApiClient, Wyniki, Podmiot, Adres, Kwota, Stawka
 
 
 keywords = ["sprzedawca", "strona", "nip", "oryginał", "kopia", "tel", "fax", "konto", "faktura", "nr", "nabywca",
@@ -12,17 +13,19 @@ keywords = ["sprzedawca", "strona", "nip", "oryginał", "kopia", "tel", "fax", "
             "brutto", "należność", "ogółem", "formy", "płatności", "nip", "kwota"]
 
 
-def daty(file):
-    wystawienie = None
-    sprzedaz = None
+def datyParse(file):
+    data_wystawienia = None
+    data_sprzedazy = None
+
     for line in file:
-        matches = re.search(r'\d{2}/\d{2}/\d{4}', line)
+        matches = re.search(r'\d{2}[:./-]\d{2}[:./-]\d{4}|\d{4}[:./-]\d{2}[:./-]\d{2}', line)
         if matches:
-            if 'wystawienia' in line.strip().lower():
-                wystawienie = str(matches.group())
-            elif 'sprzedaży' in line.strip().lower():
-                sprzedaz = str(matches.group())
-    return [wystawienie, sprzedaz]
+            for word in line.strip().lower().split():
+                if nltk.edit_distance('wystawienia', word) < 4:
+                    data_wystawienia = matches.group()
+                elif nltk.edit_distance('sprzedaży', word) < 4:
+                    data_sprzedazy = matches.group()
+    return data_wystawienia, data_sprzedazy
 
 
 def stawkaParse(file):
@@ -39,37 +42,15 @@ def stawkaParse(file):
     return match, zgodna
 
 
-# def nipParse(file):
-#     nipy = []
-#     nipy_org = []
-#     for line in file:
-#         matches = re.search(r'\d{3}-\d{3}-\d{2}-\d{2}|\d{3}-\d{2}-\d{2}-\d{3}|\d{10}', line)
-#         if matches:
-#             nipy_org.append(matches.group())
-#             nipy.append(int(matches.group().replace('-', '')))
-#     nips = list(set(nipy))
-#     with open(r'C:\Users\Mateusz\Documents\UiPath\Nip\nip.txt', 'w+') as h:
-#         for nip in nips:
-#             h.write(str(nip) + '\n')
-#     from runUiPath import checkNIP
-#     with open(r'C:\Users\Mateusz\Documents\UiPath\Nip\nip.txt', 'r') as s:
-#         if str(s.readline()).strip() != str(nips[0]).strip():
-#             print(type(s.readline().strip()), str(nips[0]).strip())
-#             os.system(checkNIP)
-#     # return nipy
-#     return nipy_org
-
-
 def nipParse(file):
     nipy = []
     nipy_org = []
     for line in file:
         matches = re.search(r'\d{3}-\d{3}-\d{2}-\d{2}|\d{3}-\d{2}-\d{2}-\d{3}|\d{10}', line)
-        if matches:
+        if matches and 'nip' in line.lower():
             nipy_org.append(matches.group())
             nipy.append(int(matches.group().replace('-', '')))
     nips = list(set(nipy))
-    # with open(r'C:\Users\Mateusz\Documents\UiPath\Nip\nip.txt', 'w+') as h:
     with open(r'C:\Users\Mateusz\flask-invoiceapp\Nip\nip.txt', 'w+') as h:
         if nips:
             for nip in nips:
@@ -77,67 +58,29 @@ def nipParse(file):
     from runUiPath import checkNIP
     # TODO rozważyć case z nips[1]
     try:
-        # if not os.path.isfile(r'C:\Users\Mateusz\Documents\UiPath\Nip\{}.txt'.format(str(nips[0]).strip())):
-        if not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\Nip\{}.txt'.format(str(nips[0]).strip())):
+        if not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\Nip\{}.txt'.format(str(nips[0]).strip())) or not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\Nip\{}.txt'.format(str(nips[1]).strip())):
             os.system(checkNIP)
     except IndexError:
-        return None
-    # with open(r'C:\Users\Mateusz\Documents\UiPath\Nip\nip.txt', 'r') as s:
-    #     if str(s.readline()).strip() != str(nips[0]).strip():
-    #         # print(type(s.readline().strip()), str(nips[0]).strip())
-    #         os.system(checkNIP)
-    # return nipy
+        pass
     return nipy_org
 
 
-def kodPocztowyParse(file):
-    kody = []
-    possibly_wrong_code = []
-    for line in file:
-        matches = re.search(r'\D\d{2}-\d{3}\D|\d{2}-\d{3}$', line)
-        if matches:
-            if len(matches.group()) > 6:
-                # if match.group()[0] != '-' and match.group()[-1] != '-':
-                kody.append(matches.group()[1:-1])
-            else:
-                kody.append(matches.group())
-    kody = list(set(kody))
-    if len(kody) > 2:
-        nipy = nipParse(file)
-        for nip in nipy:
-            for kod in kody:
-                if kod.replace('-', '') in str(nip):
-                    possibly_wrong_code.append(kod)
-                    kody.remove(kod)
-    return kody
-
-
-def kodPocztowyWalidator(file):
-    json_data = json.loads(open('slownik_kodow_poprawiony2.json').read())
-    for kod2 in kodPocztowyParse(file):
-        print(json_data[kod2])
-
-
-def numer(file):
+def numerParse(file):
     flag = False
+    flag2 = False
     numer_fv = None
     for line in file:
-        match = re.search(r'Faktura', line)
+        match = re.search(r'faktura', line.lower())
         if match:
-            for word in line.split():
-                if word[0].isdigit():
-                    if not flag:
-                        numer_fv = word.replace(',', '')
-                        flag = True
+            for word in line.lower().split():
+                if 'faktura' in word:
+                    flag2 = True
+                if flag2:
+                    if word[0].isdigit():
+                        if not flag:
+                            numer_fv = word.replace(',', '')
+                            flag = True
     return numer_fv
-
-
-def naleznosc(file):
-    for line in file:
-        match = re.search(r'Należność', line)
-        if match:
-            pass
-    return None
 
 
 def nabywca(file):
@@ -146,10 +89,7 @@ def nabywca(file):
     dane_firmy = []
     indeks_nabywcy = None
     for np in nipy:
-        print(np)
         path = "C:\\Users\\Mateusz\\Documents\\UiPath\\Nip\\{}.txt".format(str(np))
-        # path = "C:\\Users\\Mateusz\\Documents\\UiPath\\Nip\\{}.txt".format(str(5252690805))
-
         with open(path, 'r', encoding='utf8') as plik:
             for line0 in plik.readlines():
                 dane_firmy.append(line0.lower().strip())
@@ -160,7 +100,6 @@ def nabywca(file):
         for item in wersy:
             if 'nabywca' in item:
                 indeks_nabywcy = wersy.index(item)
-
         indeks_firmy = wersy.index(firma)
         if abs(indeks_nabywcy - indeks_firmy) < 2:
             print({'nabywca': firma})
@@ -189,7 +128,6 @@ def sprzedawca(file):
     for item in wersy:
         if 'sprzedawca' in item:
             indeks_sprzedawcy = wersy.index(item)
-
     indeks_firmy = wersy.index(firma)
     if abs(indeks_sprzedawcy - indeks_firmy) < 2:
         print({'sprzedawca': firma})
@@ -225,18 +163,13 @@ def data(file):
     for dat in dates:
         para = (abs(slowa.index(dat) - indeks_wystawienia), dat)
         pary.append(para)
-
     minimums = []
-
     for krotka in pary:
         minimums.append(krotka[0])
     minimum = min(minimums)
-
     for krotka in pary:
         if krotka[0] == minimum:
             wynik = krotka[1]
-    # print(slowa)
-    print(wynik)
     return wynik
 
 
@@ -261,7 +194,6 @@ def integery(file):
     # print(slowa)
     koncowki_kwot = [item for item, count in collections.Counter(liczby_calkowite_str).items() if count > 1]
     koncowki_kwot_float = [item for item, count in collections.Counter(liczby_calkowite).items() if count > 1]
-
     # print(slowa.index(koncowki_kwot[0]))
     # print(slowa.index(koncowki_kwot[1]))
     # print(slowa.index(koncowki_kwot[2]))
@@ -315,7 +247,7 @@ def integery(file):
         print({'brutto': brutto, 'netto': netto, 'vat': vat})
 
 
-def sprzedawca2(file, identyfikator):
+def dane_z_wyszukiwarki(identyfikator):
     dane_firmy = []
     dane_firmy_surowe = []
     try:
@@ -324,64 +256,21 @@ def sprzedawca2(file, identyfikator):
             for line0 in plik.readlines():
                 dane_firmy_surowe.append(line0.strip())
                 dane_firmy.append(line0.lower().strip().replace(' ', ''))
-        # print(dane_firmy[0])
-        # print(''.join(file))
-
-        # if dane_firmy[0] in ''.join(file).replace('\n', ''). replace(' ', '').lower():
-        #     print(dane_firmy_surowe)
-        # print(dane_firmy_surowe)
         return dane_firmy_surowe
     except FileNotFoundError:
         return ["Nie znaleziono danych firmy po nipie"]
-    # print(''.join(file).replace('\n', ''). replace(' ', '').lower())
 
 
-# def sprzedajacy(file):
-#     nipy = nipParse(file)
-#     lista = abcd(file)
-#     indeks_sprzedawcy = 0  # None
-#     indeks_nabywcy = None
-#     indeks_nipu_0 = None
-#     indeks_nipu_1 = None
-#     for nr, element in enumerate(lista):
-#         if "sprzedawca" in element.lower():
-#             indeks_sprzedawcy = nr
-#         elif "nabywca" in element.lower():
-#             indeks_nabywcy = nr
-#         elif nipy[0] in element.lower():
-#             indeks_nipu_0 = nr
-#         elif nipy[1] in element.lower():
-#             indeks_nipu_1 = nr
-#     indeks_nip_sprzedawcy = indeks_sprzedawcy + min(abs(indeks_sprzedawcy-indeks_nipu_0), abs(indeks_sprzedawcy-indeks_nipu_1))
-#     indeks_nip_nabywcy = indeks_nabywcy + min(abs(indeks_nabywcy - indeks_nipu_0), abs(indeks_nabywcy - indeks_nipu_1))
-#     if indeks_nip_sprzedawcy == indeks_nipu_0:
-#         nip_sprzedawcy = nipy[0]
-#     else:
-#         nip_sprzedawcy = nipy[1]
-#
-#     if indeks_nip_nabywcy == indeks_nipu_0:
-#         nip_nabywcy = nipy[0]
-#     else:
-#         nip_nabywcy = nipy[1]
-#     # print(int(nip_sprzedawcy.replace('-', '')), int(nip_nabywcy.replace('-','')))
-#     dane_sprzedawcy = sprzedawca2(file, int(nip_sprzedawcy.replace('-', '')))
-#     dane_nabywcy = sprzedawca2(file, int(nip_nabywcy.replace('-', '')))
-#     dane_sprzedawcy.append(int(nip_sprzedawcy.replace('-', '')))
-#     dane_nabywcy.append(int(nip_nabywcy.replace('-', '')))
-#     return {"sprzedawca": dane_sprzedawcy, "nabywca": dane_nabywcy}
-
-
-def sprzedajacy(file):
+def podmiot_z_nipu(file):
     nipy = nipParse(file)
-    lista = abcd(file)
     indeks_sprzedawcy = None
     indeks_nabywcy = None
     indeks_nipu_0 = None
     indeks_nipu_1 = None
     nip_sprzedawcy = None
     nip_nabywcy = None
-    for nr, element in enumerate(lista):
-        try:
+    if len(nipy) > 1:
+        for nr, element in enumerate(file):
             if "sprzedawca" in element.lower():
                 indeks_sprzedawcy = nr
             if "nabywca" in element.lower():
@@ -390,142 +279,85 @@ def sprzedajacy(file):
                 indeks_nipu_0 = nr
             if nipy[1] in element.lower():
                 indeks_nipu_1 = nr
-        except IndexError:
-            try:
-                if "sprzedawca" in element.lower():
-                    indeks_sprzedawcy = nr
-                if "nabywca" in element.lower():
-                    indeks_nabywcy = nr
-                if nipy[0] in element.lower():
-                    indeks_nipu_0 = nr
-                indeks_nipu_1 = None
-            except IndexError:
-                if "sprzedawca" in element.lower():
-                    indeks_sprzedawcy = nr
-                if "nabywca" in element.lower():
-                    indeks_nabywcy = nr
-                indeks_nipu_0 = None
-                indeks_nipu_1 = None
 
-    if indeks_nipu_1 is None and indeks_nipu_0 is not None:
-        indeks_nip_sprzedawcy = indeks_sprzedawcy + abs(indeks_sprzedawcy - indeks_nipu_0)
-        # indeks_nip_nabywcy = indeks_nabywcy + abs(indeks_nabywcy - indeks_nipu_0)
-        indeks_nip_nabywcy = None
-    elif indeks_nipu_0 is None and indeks_nipu_1 is not None:
-        indeks_nip_sprzedawcy = indeks_sprzedawcy + abs(indeks_sprzedawcy - indeks_nipu_1)
-        indeks_nip_nabywcy = indeks_nabywcy + abs(indeks_nabywcy - indeks_nipu_1)
-    elif indeks_nipu_0 is None and indeks_nipu_1 is None:
-        indeks_nip_sprzedawcy = None
-        indeks_nip_nabywcy = None
-    else:
         indeks_nip_sprzedawcy = indeks_sprzedawcy + min(abs(indeks_sprzedawcy-indeks_nipu_0), abs(indeks_sprzedawcy-indeks_nipu_1))
         indeks_nip_nabywcy = indeks_nabywcy + min(abs(indeks_nabywcy - indeks_nipu_0), abs(indeks_nabywcy - indeks_nipu_1))
-
-    try:
         if indeks_nip_sprzedawcy == indeks_nipu_0:
             nip_sprzedawcy = nipy[0]
-        # else:
-        #     nip_sprzedawcy = nipy[1]
+        else:
+            nip_sprzedawcy = nipy[1]
 
         if indeks_nip_nabywcy == indeks_nipu_0:
             nip_nabywcy = nipy[0]
-        # else:
-        #     nip_nabywcy = nipy[1]
-    except IndexError:
-        try:
-            if indeks_nip_sprzedawcy == indeks_nipu_0:
-                nip_sprzedawcy = nipy[0]
-            else:
-                nip_nabywcy = nipy[0]
-        except IndexError:
-            nip_sprzedawcy = None
-            nip_nabywcy = None
-    # print(int(nip_sprzedawcy.replace('-', '')), int(nip_nabywcy.replace('-','')))
+        else:
+            nip_nabywcy = nipy[1]
+        # print(int(nip_sprzedawcy.replace('-', '')), int(nip_nabywcy.replace('-','')))
+        print(nip_sprzedawcy, nip_nabywcy)
+    elif len(nipy) == 1:
+        nip_sprzedawcy = nipy[0]
+        dane_sprzedawcy = dane_z_wyszukiwarki(nip_sprzedawcy.replace('-', ''))
+        dane_sprzedawcy.append(nip_sprzedawcy.replace('-', ''))
+        return {"sprzedawca": dane_sprzedawcy, "nabywca": None}
+
     if nip_sprzedawcy is not None and nip_nabywcy is not None:
-        dane_sprzedawcy = sprzedawca2(file, int(nip_sprzedawcy.replace('-', '')))
-        dane_nabywcy = sprzedawca2(file, int(nip_nabywcy.replace('-', '')))
-        dane_sprzedawcy.append(int(nip_sprzedawcy.replace('-', '')))
-        dane_nabywcy.append(int(nip_nabywcy.replace('-', '')))
+        dane_sprzedawcy = dane_z_wyszukiwarki(nip_sprzedawcy.replace('-', ''))
+        dane_nabywcy = dane_z_wyszukiwarki(nip_nabywcy.replace('-', ''))
+        dane_sprzedawcy.append(nip_sprzedawcy.replace('-', ''))
+        dane_nabywcy.append(nip_nabywcy.replace('-', ''))
         return {"sprzedawca": dane_sprzedawcy, "nabywca": dane_nabywcy}
-    elif nip_sprzedawcy is not None and nip_nabywcy is None:
-        dane_sprzedawcy = sprzedawca2(file, int(nip_sprzedawcy.replace('-', '')))
-        dane_nabywcy = None
-        dane_sprzedawcy.append(int(nip_sprzedawcy.replace('-', '')))
-        return {"sprzedawca": dane_sprzedawcy, "nabywca": dane_nabywcy}
-    elif nip_sprzedawcy is None and nip_nabywcy is not None:
-        dane_sprzedawcy = None
-        dane_nabywcy = sprzedawca2(file, int(nip_nabywcy.replace('-', '')))
-        dane_nabywcy.append(int(nip_nabywcy.replace('-', '')))
-        return {"sprzedawca": dane_sprzedawcy, "nabywca": dane_nabywcy}
-    else:
-        return None
 
 
 def wypelnienie(file):
     os.makedirs(os.path.dirname('parsed_successful/'), exist_ok=True)
 
     wynik = Wyniki()
-    wynik.data_wystawienia = data(file)  # '17.02.2020'
-    wynik.data_sprzedazy = data(file)  # '17.02.2020'
-    wynik.numer = numer(file)  # '2302/W/2020'
+    wynik.data_wystawienia, wynik.data_sprzedazy = datyParse(file)
+    wynik.numer = numerParse(file)
 
     stawka = Stawka()
     stawka.stawka = stawkaParse(file)[0]
     stawka.zgodna = stawkaParse(file)[1]
     wynik.stawka = stawka
 
-    try:
-        sprzedawc = Podmiot()
-        adresSprzedawcy = Adres()
-        adresSprzedawcy.miejscowosc = sprzedajacy(file)["sprzedawca"][3]  # 'Warszawa'
-        adresSprzedawcy.kod_pocztowy = sprzedajacy(file)["sprzedawca"][2]  # '02-315'
-        adresSprzedawcy.ulica = sprzedajacy(file)["sprzedawca"][1]  # 'Barska'
-        adresSprzedawcy.nr_budynku = None  # '28'
-        adresSprzedawcy.nr_mieszkania = None  # '30'
-        sprzedawc.adres = adresSprzedawcy
-        sprzedawc.nip = sprzedajacy(file)["sprzedawca"][4]  # '5220001116'
-        sprzedawc.nazwa = sprzedajacy(file)["sprzedawca"][0]  # 'B & D HOTELS Spółka Akcyjna'
-        sprzedawc.forma = None  # 'Spółka Akcyjna'
-        wynik.sprzedawca = sprzedawc
-    except (TypeError, IndexError):
-        sprzedawc = Podmiot()
-        adresSprzedawcy = Adres()
-        adresSprzedawcy.miejscowosc = ""
-        adresSprzedawcy.kod_pocztowy = ""
-        adresSprzedawcy.ulica = ""
-        adresSprzedawcy.nr_budynku = None  # '28'
-        adresSprzedawcy.nr_mieszkania = None  # '30'
-        sprzedawc.adres = adresSprzedawcy
-        sprzedawc.nip = ""
-        sprzedawc.nazwa = ""
-        sprzedawc.forma = None  # 'Spółka Akcyjna'
-        wynik.sprzedawca = sprzedawc
+    sprzedawc = Podmiot()
+    adresSprzedawcy = Adres()
+    kurwa_sprzedajacy = podmiot_z_nipu(file)
+    adresSprzedawcy.miejscowosc = kurwa_sprzedajacy["sprzedawca"][3]  # 'Warszawa'
+    adresSprzedawcy.kod_pocztowy = kurwa_sprzedajacy["sprzedawca"][2]  # '02-315'
+    adresSprzedawcy.ulica = kurwa_sprzedajacy["sprzedawca"][1]  # 'Barska'
+    adresSprzedawcy.nr_budynku = None  # '28'
+    adresSprzedawcy.nr_mieszkania = None  # '30'
+    sprzedawc.adres = adresSprzedawcy
+    sprzedawc.nip = kurwa_sprzedajacy["sprzedawca"][4]  # '5220001116'
+    sprzedawc.nazwa = kurwa_sprzedajacy["sprzedawca"][0]  # 'B & D HOTELS Spółka Akcyjna'
+    sprzedawc.forma = None  # 'Spółka Akcyjna'
+    wynik.sprzedawca = sprzedawc
 
-    try:
+    if kurwa_sprzedajacy["nabywca"]:
         nabywc = Podmiot()
         adresNabywcy = Adres()
-        adresNabywcy.miejscowosc = sprzedajacy(file)["nabywca"][3]  # 'Bydgoszcz'
-        adresNabywcy.kod_pocztowy = sprzedajacy(file)["nabywca"][2]  # '85-240'
-        adresNabywcy.ulica = sprzedajacy(file)["nabywca"][1]  # 'Kraszewskiego'
+        adresNabywcy.miejscowosc = kurwa_sprzedajacy["nabywca"][3]  # 'Bydgoszcz'
+        adresNabywcy.kod_pocztowy = kurwa_sprzedajacy["nabywca"][2]  # '85-240'
+        adresNabywcy.ulica = kurwa_sprzedajacy["nabywca"][1]  # 'Kraszewskiego'
         adresNabywcy.nr_budynku = None  # '1'
         adresNabywcy.nr_mieszkania = None
         nabywc.adres = adresNabywcy
-        nabywc.nip = sprzedajacy(file)["nabywca"][4]  # '5213207288'
-        nabywc.nazwa = sprzedajacy(file)["nabywca"][0]  # 'Atos Global Delivery Center Polska Sp. z o. o Sp.k.'
+        nabywc.nip = kurwa_sprzedajacy["nabywca"][4]  # '5213207288'
+        nabywc.nazwa = kurwa_sprzedajacy["nabywca"][0]  # 'Atos Global Delivery Center Polska Sp. z o. o Sp.k.'
         nabywc.forma = None  # 'Sp. z o. o Sp.k.'
         wynik.nabywca = nabywc
-    except (TypeError, IndexError):
+    else:
         nabywc = Podmiot()
         adresNabywcy = Adres()
-        adresNabywcy.miejscowosc = ""
-        adresNabywcy.kod_pocztowy = ""
-        adresNabywcy.ulica = ""
-        adresNabywcy.nr_budynku = None  # '1'
+        adresNabywcy.miejscowosc = dostawcakurwa(file)
+        adresNabywcy.kod_pocztowy = None
+        adresNabywcy.ulica = None
+        adresNabywcy.nr_budynku = None
         adresNabywcy.nr_mieszkania = None
         nabywc.adres = adresNabywcy
-        nabywc.nip = ""
-        nabywc.nazwa = ""
-        nabywc.forma = None  # 'Sp. z o. o Sp.k.'
+        nabywc.nip = None
+        nabywc.nazwa = None
+        nabywc.forma = None
         wynik.nabywca = nabywc
 
     kwota = Kwota()
@@ -541,11 +373,13 @@ def wypelnienie(file):
 
     with open('parsed_successful/' + str(wynik.numer).replace('/', '') + '.json', 'wb') as g:
         g.write(writeRes)
-
     return wynik
 
-def abcd(file):
-    listalinii = []
-    for line in file:
-        listalinii.append(line.strip())
-    return listalinii
+
+def dostawcakurwa(file):
+    nabywca = None
+    for idx, line in enumerate(file):
+        if 'nabywca' in line.lower():
+            nabywca = ''.join(islice(file, idx, idx + 4))
+    print(nabywca)
+    return nabywca
