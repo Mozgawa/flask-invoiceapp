@@ -1,11 +1,8 @@
 import os
-from flask import jsonify  # Flask, request, render_template
+from flask import Flask, flash, request, redirect, url_for, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
-# import pandas as pd
-from tables import Results
-# import urllib.request
-from flask import Flask, flash, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
+from tables import Results
 from invoiceparser import wypelnienie
 
 
@@ -66,40 +63,8 @@ def get_by_id(id_):
         return str(e)
 
 
-@app.route("/add/form", methods=['GET', 'POST'])
-def add_book_form():
-    if request.method == 'POST':
-        numer = request.form.get('numer')
-        stawka = request.form.get('stawka')
-        wystawienie = request.form.get('wystawienie')
-        sprzedaz = request.args.get('sprzedaz')
-        kwota = request.args.get('kwota')
-        sprzedawca = request.args.get('sprzedawca')
-        nabywca = request.args.get('nabywca')
-        try:
-            faktura = Faktura(
-                numer=numer,
-                stawka=stawka,
-                wystawienie=wystawienie,
-                sprzedaz=sprzedaz,
-                kwota=kwota,
-                sprzedawca=sprzedawca,
-                nabywca=nabywca
-            )
-            db.session.add(faktura)
-            db.session.commit()
-            return "Faktura dodana. faktura id={}".format(faktura.id)
-        except Exception as e:
-            return str(e)
-    # return render_template("getdata.html")
-    return render_template("getdata.html")
-
-
 @app.route('/results')
 def search_results():
-    # results = []
-    # search_string = search.data['search']
-    # if search.data['search'] == '':
     results = Faktura.query.all()
     if not results:
         flash('No results found!')
@@ -138,17 +103,9 @@ def upload_image():
         scan(filename)
         from runUiPath import extractText
         os.system(extractText)
-        # print('upload_image filename: ' + filename)
-        # flash('Image successfully uploaded and displayed')
-        # faktury = Faktura.query.all()
-        # print(jsonify([f.serialize() for f in faktury]).json())
-        # g = open('invoice_ocr.txt', 'r', encoding='utf8')
-        # g = open('C:\\Users\\Mateusz\\Documents\\UiPath\\InvoiceOCR\\ocr_text.txt', 'r', encoding='utf8')
         g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\InvoiceOCR\\ocr_text.txt', 'r', encoding='utf8')
         wynik = wypelnienie(g.readlines())
-        # flash(wypelnienie(g.readlines()))
         g.close()
-        # flash(str([f.serialize() for f in faktury]))
         if not wynik.data_wystawienia and wynik.data_sprzedazy:
             wynik.data_wystawienia = wynik.data_sprzedazy
         return render_template('upload.html', filename=filename, numer=str(wynik.numer), nazwa=str(wynik.nabywca), sprzedawca=str(wynik.sprzedawca), data_wystawienia=wynik.data_wystawienia, data_sprzedazy=wynik.data_sprzedazy, stawka=str(wynik.stawka.stawka), kwota=str(wynik.kwota.brutto))
@@ -159,7 +116,6 @@ def upload_image():
 
 @app.route('/display/<filename>')
 def display_image(filename):
-    # print('display_image filename: ' + filename)
     return redirect(url_for('static', filename='uploads/' + filename), code=301)
 
 
