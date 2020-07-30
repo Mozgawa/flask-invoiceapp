@@ -4,7 +4,7 @@ import os
 import jsonpickle
 # import json
 import nltk
-from parsed_dict import ApiClient, Wyniki, Podmiot, Adres, Kwota, Stawka
+from parsed_dict import ApiClient, Wyniki, Kwota, Stawka
 
 
 keywords = ["sprzedawca", "strona", "nip", "oryginał", "kopia", "tel", "fax", "konto", "faktura", "nr", "nabywca",
@@ -319,46 +319,13 @@ def wypelnienie(file):
     stawka.zgodna = stawkaParse(file)[1]
     wynik.stawka = stawka
 
-    sprzedawc = Podmiot()
-    adresSprzedawcy = Adres()
     kurwa_sprzedajacy = podmiot_z_nipu(file)
-    adresSprzedawcy.miejscowosc = kurwa_sprzedajacy["sprzedawca"][3]  # 'Warszawa'
-    adresSprzedawcy.kod_pocztowy = kurwa_sprzedajacy["sprzedawca"][2]  # '02-315'
-    adresSprzedawcy.ulica = kurwa_sprzedajacy["sprzedawca"][1]  # 'Barska'
-    adresSprzedawcy.nr_budynku = None  # '28'
-    adresSprzedawcy.nr_mieszkania = None  # '30'
-    sprzedawc.adres = adresSprzedawcy
-    sprzedawc.nip = kurwa_sprzedajacy["sprzedawca"][4]  # '5220001116'
-    sprzedawc.nazwa = kurwa_sprzedajacy["sprzedawca"][0]  # 'B & D HOTELS Spółka Akcyjna'
-    sprzedawc.forma = None  # 'Spółka Akcyjna'
-    wynik.sprzedawca = sprzedawc
+    wynik.sprzedawca = '\n'.join(kurwa_sprzedajacy["sprzedawca"])
 
     if kurwa_sprzedajacy["nabywca"]:
-        nabywc = Podmiot()
-        adresNabywcy = Adres()
-        adresNabywcy.miejscowosc = kurwa_sprzedajacy["nabywca"][3]  # 'Bydgoszcz'
-        adresNabywcy.kod_pocztowy = kurwa_sprzedajacy["nabywca"][2]  # '85-240'
-        adresNabywcy.ulica = kurwa_sprzedajacy["nabywca"][1]  # 'Kraszewskiego'
-        adresNabywcy.nr_budynku = None  # '1'
-        adresNabywcy.nr_mieszkania = None
-        nabywc.adres = adresNabywcy
-        nabywc.nip = kurwa_sprzedajacy["nabywca"][4]  # '5213207288'
-        nabywc.nazwa = kurwa_sprzedajacy["nabywca"][0]  # 'Atos Global Delivery Center Polska Sp. z o. o Sp.k.'
-        nabywc.forma = None  # 'Sp. z o. o Sp.k.'
-        wynik.nabywca = nabywc
+        wynik.nabywca = '\n'.join(kurwa_sprzedajacy["nabywca"])
     else:
-        nabywc = Podmiot()
-        adresNabywcy = Adres()
-        adresNabywcy.miejscowosc = dostawcakurwa(file)
-        adresNabywcy.kod_pocztowy = None
-        adresNabywcy.ulica = None
-        adresNabywcy.nr_budynku = None
-        adresNabywcy.nr_mieszkania = None
-        nabywc.adres = adresNabywcy
-        nabywc.nip = None
-        nabywc.nazwa = None
-        nabywc.forma = None
-        wynik.nabywca = nabywc
+        wynik.nabywca = dostawcakurwa(file)
 
     kwota = Kwota()
     kwota.brutto = '675'

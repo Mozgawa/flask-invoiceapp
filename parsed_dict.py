@@ -4,21 +4,10 @@ from datetime import datetime, date
 
 parsed_dict = {
     'nr_faktury': 'string',
-    'sprzedawca': {
-        'nazwa': 'string',
-        'adres': 'string',
-        'nip': 'string',
-        'forma': 'string'
-    },
-    'nabywca': {
-        'nazwa': 'string',
-        'adres': 'string',
-        'nip': 'string',
-        'forma': 'string'
-    },
+    'sprzedawca': 'string',
+    'nabywca': 'string',
     'data_wystawienia': 'string',
     'data_sprzedazy': 'string',
-    'towar_usluga': 'string',
     'netto': 'float',
     'brutto': 'float',
     'podatek': 'string',
@@ -83,71 +72,6 @@ class Kwota(object):
         self.waluta = waluta
 
 
-class Adres(object):
-    """Wyniki parsowania"""
-
-    """
-    Attributes:
-      swagger_types (dict): The key is attribute name
-                            and the value is attribute type.
-      attribute_map (dict): The key is attribute name
-                            and the value is json key in definition.                     
-    """
-    swagger_types = {
-        'miejscowosc': 'str',
-        'kod_pocztowy': 'str',
-        'ulica': 'str',
-        'nr_budynku': 'str',
-        'nr_mieszkania': 'str'
-    }
-
-    attribute_map = {
-        'miejscowosc': 'miejscowosc',
-        'kod_pocztowy': 'kodPocztowy',
-        'ulica': 'ulica',
-        'nr_budynku': 'nrBudynku',
-        'nr_mieszkania': 'nrMieszkania',
-    }
-
-    def __init__(self, miejscowosc=None, kod_pocztowy=None, ulica=None, nr_budynku=None, nr_mieszkania=None):
-        self.miejscowosc = miejscowosc
-        self.kod_pocztowy = kod_pocztowy
-        self.ulica = ulica
-        self.nr_budynku = nr_budynku
-        self.nr_mieszkania = nr_mieszkania
-
-
-class Podmiot(object):
-    """Podmiot prawa cywilnego. Osoba Prawna lub Osoba Fizyczna. Np. Sprzedawca, nabywca"""
-
-    """
-    Attributes:
-      swagger_types (dict): The key is attribute name
-                            and the value is attribute type.
-      attribute_map (dict): The key is attribute name
-                            and the value is json key in definition.                     
-    """
-    swagger_types = {
-        'nazwa': 'str',
-        'adres': 'str',
-        'nip': 'int',
-        'forma': 'str'
-    }
-
-    attribute_map = {
-        'nazwa': 'nazwa',
-        'adres': 'adres',
-        'nip': 'nip',
-        'forma': 'forma'
-    }
-
-    def __init__(self, nazwa=None, adres=None, nip=None, forma=None):
-        self.nazwa = nazwa
-        self.adres = adres
-        self.nip = nip
-        self.forma = forma
-
-
 class Wyniki(object):
     """Wyniki parsowania"""
 
@@ -162,18 +86,16 @@ class Wyniki(object):
         'data_wystawienia': 'str',
         'data_sprzedazy': 'str',
         'stawka': 'str',
-        'nip': 'list[int]',
         'numer': 'str',
         'kwota': 'str',
-        'sprzedawca': 'Podmiot',
-        'nabywca': 'Podmiot'
+        'sprzedawca': 'str',
+        'nabywca': 'str'
     }
 
     attribute_map = {
         'data_wystawienia': 'dataWystawienia',
         'data_sprzedazy': 'dataSprzedazy',
         'stawka': 'stawka',
-        'nip': 'nip',
         'numer': 'numer',
         'kwota': 'kwota',
         'sprzedawca': 'sprzedawca',
@@ -181,11 +103,10 @@ class Wyniki(object):
     }
 
 
-    def __init__(self, data_wystawienia=None, data_sprzedazy=None, stawka=None, nip=None, numer=None, kwota=None, sprzedawca=None, nabywca=None):
+    def __init__(self, data_wystawienia=None, data_sprzedazy=None, stawka=None, numer=None, kwota=None, sprzedawca=None, nabywca=None):
         self.data_wystawienia = data_wystawienia
         self.data_sprzedazy = data_sprzedazy
         self.stawka = stawka
-        self.nip = nip
         self.numer = numer
         self.kwota = kwota
         self.sprzedawca = sprzedawca

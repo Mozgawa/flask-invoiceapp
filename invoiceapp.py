@@ -1,15 +1,12 @@
-# import os
+import os
 from flask import jsonify  # Flask, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 # import pandas as pd
 from tables import Results
-
-import os
 # import urllib.request
 from flask import Flask, flash, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
-
-from parser import wypelnienie
+from invoiceparser import wypelnienie
 
 
 app = Flask(__name__)
@@ -28,15 +25,25 @@ def add_book():
     numer = request.args.get('numer')
     stawka = request.args.get('stawka')
     wystawienie = request.args.get('wystawienie')
+    sprzedaz = request.args.get('sprzedaz')
+    kwota = request.args.get('kwota')
+    sprzedawca = request.args.get('sprzedawca')
+    nabywca = request.args.get('nabywca')
+
     try:
         faktura = Faktura(
             numer=numer,
             stawka=stawka,
-            wystawienie=wystawienie
+            wystawienie=wystawienie,
+            sprzedaz=sprzedaz,
+            kwota=kwota,
+            sprzedawca=sprzedawca,
+            nabywca=nabywca
         )
         db.session.add(faktura)
         db.session.commit()
-        return "Faktura dodana. faktura id={}".format(faktura.id)
+        # return "Faktura dodana. faktura id={}".format(faktura.id)
+        return redirect('/results')
     except Exception as e:
         return str(e)
 
@@ -65,11 +72,19 @@ def add_book_form():
         numer = request.form.get('numer')
         stawka = request.form.get('stawka')
         wystawienie = request.form.get('wystawienie')
+        sprzedaz = request.args.get('sprzedaz')
+        kwota = request.args.get('kwota')
+        sprzedawca = request.args.get('sprzedawca')
+        nabywca = request.args.get('nabywca')
         try:
             faktura = Faktura(
                 numer=numer,
                 stawka=stawka,
-                wystawienie=wystawienie
+                wystawienie=wystawienie,
+                sprzedaz=sprzedaz,
+                kwota=kwota,
+                sprzedawca=sprzedawca,
+                nabywca=nabywca
             )
             db.session.add(faktura)
             db.session.commit()
@@ -86,22 +101,14 @@ def search_results():
     # search_string = search.data['search']
     # if search.data['search'] == '':
     results = Faktura.query.all()
-    # if not results:
-    #     flash('No results found!')
-    #     return redirect('/')
-    # else:
-    #     # display results
-    #     table = Results(results)
-    #     table.border = True
-    table = Results(results)
-    table.border = True
+    if not results:
+        flash('No results found!')
+        return redirect('/')
+    else:
+        table = Results(results)
+        table.border = True
     return render_template('result.html', table=table)
 
-
-# import os
-# import urllib.request
-# from flask import Flask, flash, request, redirect, url_for, render_template
-# from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 
@@ -142,8 +149,9 @@ def upload_image():
         # flash(wypelnienie(g.readlines()))
         g.close()
         # flash(str([f.serialize() for f in faktury]))
-        return render_template('upload.html', filename=filename, numer=str(wynik.numer), nazwa=str(wynik.nabywca.nazwa) + "\n" + str(wynik.nabywca.adres.ulica) + "\n" + str(wynik.nabywca.adres.kod_pocztowy) + " " + str(wynik.nabywca.adres.miejscowosc) + "\n" + "NIP:" + str(wynik.nabywca.nip), sprzedawca=str(wynik.sprzedawca.nazwa) + "\n" + str(wynik.sprzedawca.adres.ulica) + "\n" + str(wynik.sprzedawca.adres.kod_pocztowy) + " " + str(wynik.sprzedawca.adres.miejscowosc) + "\n" + "NIP:" + str(wynik.sprzedawca.nip), value=str(wynik.nabywca.nip), data_wystawienia=wynik.data_wystawienia)
-        # return render_template('upload.html', filename="brightened-image.png", numer=str(wynik.numer), nazwa=str(wynik.nabywca.nazwa) + "\n" + str(wynik.nabywca.adres.ulica) + "\n" + str(wynik.nabywca.adres.kod_pocztowy) + " " + str(wynik.nabywca.adres.miejscowosc) + "\n" + "NIP:" + str(wynik.nabywca.nip), sprzedawca=str(wynik.sprzedawca.nazwa) + "\n" + str(wynik.sprzedawca.adres.ulica) + "\n" + str(wynik.sprzedawca.adres.kod_pocztowy) + " " + str(wynik.sprzedawca.adres.miejscowosc) + "\n" + "NIP:" + str(wynik.sprzedawca.nip), value=str(wynik.nabywca.nip), data_wystawienia=wynik.data_wystawienia)
+        if not wynik.data_wystawienia and wynik.data_sprzedazy:
+            wynik.data_wystawienia = wynik.data_sprzedazy
+        return render_template('upload.html', filename=filename, numer=str(wynik.numer), nazwa=str(wynik.nabywca), sprzedawca=str(wynik.sprzedawca), data_wystawienia=wynik.data_wystawienia, data_sprzedazy=wynik.data_sprzedazy, stawka=str(wynik.stawka.stawka), kwota=str(wynik.kwota.brutto))
     else:
         flash('Allowed image types are -> png, jpg, jpeg, gif')
         return redirect(request.url)

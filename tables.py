@@ -6,3 +6,7 @@ class Results(Table):
     numer = Col('Numer')
     stawka = Col('Stawka')
     wystawienie = Col('Wystawienie')
+    sprzedaz = Col('Sprzedaz')
+    kwota = Col('Kwota')
+    sprzedawca = Col('Sprzedawca')
+    nabywca = Col('Nabywca')

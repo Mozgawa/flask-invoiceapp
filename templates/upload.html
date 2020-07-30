@@ -43,10 +43,10 @@ body {
 <title>Python Flask File Upload Example</title>
 <body>
 <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Work+Sans:400,700" rel="stylesheet">
+<!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">-->
 <h2>Aplikacja do parsowania danych z faktury</h2>
 <div class="row">
   <div class="column">
-<!--      <div class="column" style="background-color:#4CC0BF;">-->
     <h2>Wybierz fakturę</h2>
     <p>{% with messages = get_flashed_messages() %}
 	  {% if messages %}
@@ -101,6 +101,19 @@ input[type=submit]:hover {
   background-color: #45a049;
 }
 
+a:link, a:visited {
+  background-color: #45a049;
+  color: white;
+  padding: 14px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+a:hover, a:active {
+  background-color: #45a049;
+}
+
 .container {
   border-radius: 5px;
   background-color: #f2f2f2;
@@ -136,9 +149,6 @@ input[type=submit]:hover {
 </style>
 </head>
 <body>
-
-<!--<h2>Craxon</h2>-->
-
 <div class="container">
   <form action="/action_page.php">
 	<div class="row">
@@ -162,7 +172,7 @@ input[type=submit]:hover {
       <label for="lname">Data sprzedaży</label>
     </div>
     <div class="col-25">
-      <input type="text" value="17/02/2020" id="lname" name="lastname" placeholder="01/01/1000">
+      <input type="text" value={{ data_wystawienia }} id="lname" name="lastname" placeholder="01/01/1000">
     </div>
   </div>
   <div class="row">
@@ -170,29 +180,23 @@ input[type=submit]:hover {
       <label for="stawka">Stawka</label>
     </div>
     <div class="col-75">
-        <input type="text" value="23%" id="stawka" name="stawka" placeholder="23%">
+        <input type="text" value={{ stawka }} id="stawka" name="stawka" placeholder="23%">
     </div>
   </div>
-<!--       <div class="row">-->
-<!--    <div class="col-25">-->
-<!--      <label for="country">Stawka</label>-->
-<!--    </div>-->
-<!--    <div class="col-75">-->
-<!--      <select id="country" name="country">-->
-<!--        <option value="australia">8%</option>-->
-<!--        <option value="canada">0%</option>-->
-<!--        <option value="usa">23%</option>-->
-<!--      </select>-->
-<!--    </div>-->
-<!--  </div>-->
+  <div class="row">
+    <div class="col-25">
+      <label for="kwota">Kwota</label>
+    </div>
+    <div class="col-75">
+        <input type="text" value={{ kwota }} id="kwota" name="kwota" placeholder="0 PLN">
+    </div>
+  </div>
   <div class="row">
     <div class="col-25">
       <label for="subject">Sprzedawca</label>
     </div>
     <div class="col-75">
       <textarea id="subject" name="subject" placeholder="Dane sprzedawcy.." style="height:100px">{{ sprzedawca }}</textarea>
-<!--              <textarea id="subject" name="subject" placeholder="B & D HOTELS Spółka Akcyjna NIP: 5220001116" style="height:100px">B & D HOTELS Spółka Akcyjna&#13;&#10;NIP: 5220001116&#13;&#10;ul. Barska 28/30&#13;&#10;02-318 Warszawa</textarea>-->
-
     </div>
   </div>
 	<div class="row">
@@ -204,7 +208,8 @@ input[type=submit]:hover {
     </div>
   </div>
   <div class="row">
-    <input type="submit" value="Zapisz">
+    <a type="button" class="btn btn-success" href="http://127.0.0.1:5000/add?numer={{ numer }}&stawka={{ stawka }}&wystawienie={{ data_wystawienia }}&sprzedaz={{ data_sprzedazy }}&kwota={{ kwota }}&sprzedawca={{ sprzedawca }}&nabywca={{ nazwa }}">Zapisz</a>
+<!--    <input type="submit"  value="Zapisz">-->
   </div>
   </form>
 </div>
@@ -213,8 +218,6 @@ input[type=submit]:hover {
 </form>
   </div>
   <div class="column">
-<!--        <div class="column" style="background-color:#4CC0BF;">-->
-<!--    <h2>Zdjęcie</h2>-->
     {% if filename %}
 	<div>
 		<img src="{{ url_for('display_image', filename=filename) }}" alt="" style="border-radius: 10px">
@@ -222,4 +225,12 @@ input[type=submit]:hover {
 {% endif %}
   </div>
 </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js " integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo "
+        crossorigin="anonymous "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js " integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49 "
+        crossorigin="anonymous "></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js " integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy "
+        crossorigin="anonymous "></script>
 </body>
+
+</html>
