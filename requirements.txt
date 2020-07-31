@@ -1,3 +1,4 @@
+pdfminer
 nltk
 PIL
 jsonpickle
