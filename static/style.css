@@ -18,6 +18,10 @@ img {
  width:650px;
  height:700px;
 }
+embed {
+ width:650px;
+ height:700px;
+}
 
 .column {
   float: left;

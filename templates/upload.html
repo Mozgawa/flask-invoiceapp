@@ -103,7 +103,8 @@
     <div class="column">
         {% if filename %}
         <div>
-            <img src="{{ url_for('display_image', filename=filename) }}" alt="" style="border-radius: 10px">
+<!--            <img src="{{ url_for('display_image', filename=filename) }}" alt="" style="border-radius: 10px">-->
+            <embed src="{{ url_for('display_image', filename=filename) }}" width="650px", height="700px"/>
         </div>
         {% endif %}
     </div>
