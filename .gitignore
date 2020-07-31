@@ -1,3 +1,4 @@
 .idea
 .env
-.local
+/InvoiceOCR/.local/
+/Nip/.local/

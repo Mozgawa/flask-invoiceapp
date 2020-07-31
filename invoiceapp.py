@@ -3,12 +3,13 @@ from flask import Flask, flash, request, redirect, url_for, render_template, jso
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from tables import Results
-from invoiceparser import wypelnienie
+from invoiceparser import wypelnienie, removeAccents
 
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'static/uploads/'
+ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'pdf']
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -75,9 +76,6 @@ def search_results():
     return render_template('result.html', table=table)
 
 
-ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
-
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -99,18 +97,26 @@ def upload_image():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        from scanning import scan
-        scan(filename)
-        from runUiPath import extractText
-        os.system(extractText)
-        g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\InvoiceOCR\\ocr_text.txt', 'r', encoding='utf8')
+        if file.filename.rsplit('.', 1)[1].lower() == 'pdf':
+            from pdf_parser import extract_text_from_pdf
+            with open('InvoiceOCR/ocr_text.txt', 'w') as f:
+                f.write(extract_text_from_pdf('static/uploads/{}'.format(file.filename)))
+            g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\InvoiceOCR\\ocr_text.txt', 'r', encoding='windows-1250')
+        else:
+            from scanning import scan
+            scan(filename)
+            from runUiPath import extractText
+            os.system(extractText)
+            g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\InvoiceOCR\\ocr_text.txt', 'r', encoding='utf8')
+        # file = [removeAccents(line.lower()) for line in g.readlines()]
+        # wynik = wypelnienie(file)
         wynik = wypelnienie(g.readlines())
         g.close()
         if not wynik.data_wystawienia and wynik.data_sprzedazy:
             wynik.data_wystawienia = wynik.data_sprzedazy
         return render_template('upload.html', filename=filename, numer=str(wynik.numer), nazwa=str(wynik.nabywca), sprzedawca=str(wynik.sprzedawca), data_wystawienia=wynik.data_wystawienia, data_sprzedazy=wynik.data_sprzedazy, stawka=str(wynik.stawka.stawka), kwota=str(wynik.kwota.brutto))
     else:
-        flash('Allowed image types are -> png, jpg, jpeg, gif')
+        flash('Allowed image types are -> png, jpg, jpeg, gif, pdf')
         return redirect(request.url)
 
 
