@@ -79,7 +79,7 @@ def nipParse(file):
     return nipy_org
 
 
-def integery(file):
+def amountParse(file):
     liczby_calkowite = []
     liczby_calkowite_str = []
     slowa = []
@@ -172,7 +172,7 @@ def filling(file):
     wynik.data_wystawienia, wynik.data_sprzedazy = datesParse(file)
     wynik.numer = numberParse(file)
     wynik.stawka = stakeParse(file)[0]
-    wynik.kwota = integery(file)
+    wynik.kwota = amountParse(file)
 
     kurwa_sprzedajacy = podmiot_z_nipu(file)
     if kurwa_sprzedajacy['sprzedawca']:
