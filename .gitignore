@@ -1,4 +1,5 @@
 .idea
 .env
-/InvoiceOCR/.local/
-/Nip/.local/
+venv/
+*.pyc
+__pycache__/
