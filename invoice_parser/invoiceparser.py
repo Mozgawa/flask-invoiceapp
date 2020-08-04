@@ -66,7 +66,7 @@ def nipParse(file):
                 nipy_org.append(match)
                 nipy.append(int(match.replace('-', '')))
     nips = list(set(nipy))
-    with open(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\nipy.txt', 'w+') as h:
+    with open(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\nip.txt', 'w+') as h:
         if nips:
             for nip in nips:
                 h.write(str(nip) + '\n')
@@ -165,6 +165,22 @@ def podmiot_z_nipu(file):
         return {"sprzedawca": dane_sprzedawcy, "nabywca": dane_nabywcy}
 
 
+def dostawca_z_ocr(file):
+    nabywca = None
+    for idx, line in enumerate(file):
+        if 'nabywca' in line.lower():
+            nabywca = ''.join(islice(file, idx, idx + 4))
+    return nabywca
+
+
+def sprzedawca_z_ocr(file):
+    sprzedawca = None
+    for idx, line in enumerate(file):
+        if 'sprzedawca' in line.lower():
+            sprzedawca = ''.join(islice(file, idx, idx + 4))
+    return sprzedawca
+
+
 def filling(file):
     # os.makedirs(os.path.dirname('parsed_successful/'), exist_ok=True)
 
@@ -192,19 +208,3 @@ def filling(file):
     # with open('parsed_successful/' + str(wynik.numer).replace('/', '') + '.json', 'wb') as g:
     #     g.write(writeRes)
     return wynik
-
-
-def dostawca_z_ocr(file):
-    nabywca = None
-    for idx, line in enumerate(file):
-        if 'nabywca' in line.lower():
-            nabywca = ''.join(islice(file, idx, idx + 4))
-    return nabywca
-
-
-def sprzedawca_z_ocr(file):
-    sprzedawca = None
-    for idx, line in enumerate(file):
-        if 'sprzedawca' in line.lower():
-            sprzedawca = ''.join(islice(file, idx, idx + 4))
-    return sprzedawca

@@ -97,8 +97,8 @@ def upload_image():
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         if file.filename.rsplit('.', 1)[1].lower() == 'pdf':
-            with open('InvoiceOCR/ocr_text.txt', 'w') as f:
-                f.write(extract_text_from_pdf('static/uploads/{}'.format(file.filename)))
+            with open('invoice_parser/UiPath_robots/OCR/ocr_text.txt', 'w') as f:
+                f.write(extract_text_from_pdf('invoice_parser/static/uploads/{}'.format(file.filename)))
             g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\invoice_parser\\UiPath_robots\\OCR\\ocr_text.txt', 'r', encoding='windows-1250')
         else:
             scan(filename)
