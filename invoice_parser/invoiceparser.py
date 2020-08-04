@@ -71,8 +71,10 @@ def nipParse(file):
             for nip in nips:
                 h.write(str(nip) + '\n')
     try:
-        if not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(str(nips[0]).strip())) or \
-                not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(str(nips[1]).strip())):
+        if not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(
+                str(nips[0]).strip())) or \
+                not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(
+                    str(nips[1]).strip())):
             os.system(checkNIP)
     except IndexError:
         pass
@@ -130,8 +132,10 @@ def podmiot_z_nipu(file):
                 indeks_nipu_0 = nr
             if nipy[1] in element.lower():
                 indeks_nipu_1 = nr
-        indeks_nip_sprzedawcy = indeks_sprzedawcy + min(abs(indeks_sprzedawcy-indeks_nipu_0), abs(indeks_sprzedawcy-indeks_nipu_1))
-        indeks_nip_nabywcy = indeks_nabywcy + min(abs(indeks_nabywcy - indeks_nipu_0), abs(indeks_nabywcy - indeks_nipu_1))
+        indeks_nip_sprzedawcy = indeks_sprzedawcy + min(abs(indeks_sprzedawcy - indeks_nipu_0),
+                                                        abs(indeks_sprzedawcy - indeks_nipu_1))
+        indeks_nip_nabywcy = indeks_nabywcy + min(abs(indeks_nabywcy - indeks_nipu_0),
+                                                  abs(indeks_nabywcy - indeks_nipu_1))
         if indeks_nip_sprzedawcy == indeks_nipu_0:
             nip_sprzedawcy = nipy[0]
         else:

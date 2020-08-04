@@ -99,11 +99,13 @@ def upload_image():
         if file.filename.rsplit('.', 1)[1].lower() == 'pdf':
             with open('invoice_parser/UiPath_robots/OCR/ocr_text.txt', 'w') as f:
                 f.write(extract_text_from_pdf('invoice_parser/static/uploads/{}'.format(file.filename)))
-            g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\invoice_parser\\UiPath_robots\\OCR\\ocr_text.txt', 'r', encoding='windows-1250')
+            g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\invoice_parser\\UiPath_robots\\OCR\\ocr_text.txt', 'r',
+                     encoding='windows-1250')
         else:
             scan(filename)
             os.system(extractText)
-            g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\invoice_parser\\UiPath_robots\\OCR\\ocr_text.txt', 'r', encoding='utf8')
+            g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\invoice_parser\\UiPath_robots\\OCR\\ocr_text.txt', 'r',
+                     encoding='utf8')
         file = [removeAccents(line) for line in g.readlines()]
         wynik = filling(file)
         g.close()

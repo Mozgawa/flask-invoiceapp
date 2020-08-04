@@ -43,8 +43,8 @@ class Wyniki(object):
         'nabywca': 'nabywca'
     }
 
-
-    def __init__(self, data_wystawienia=None, data_sprzedazy=None, stawka=None, numer=None, kwota=None, sprzedawca=None, nabywca=None):
+    def __init__(self, data_wystawienia=None, data_sprzedazy=None, stawka=None, numer=None, kwota=None, sprzedawca=None,
+                 nabywca=None):
         self.data_wystawienia = data_wystawienia
         self.data_sprzedazy = data_sprzedazy
         self.stawka = stawka
