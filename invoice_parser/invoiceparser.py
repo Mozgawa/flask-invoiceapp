@@ -104,7 +104,7 @@ def dane_z_wyszukiwarki(identyfikator):
     dane_firmy = []
     dane_firmy_surowe = []
     try:
-        with open(r'C:\Users\Mateusz\flask-invoiceapp\Nip\{}.txt'.format(identyfikator), 'r', encoding='utf8') as file:
+        with open(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(identyfikator), 'r', encoding='utf8') as file:
             for line in file.readlines():
                 dane_firmy_surowe.append(line.strip())
                 dane_firmy.append(line.lower().strip().replace(' ', ''))
