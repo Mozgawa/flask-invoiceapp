@@ -107,13 +107,15 @@ def upload_image():
             g = open('C:\\Users\\Mateusz\\flask-invoiceapp\\invoice_parser\\UiPath_robots\\OCR\\ocr_text.txt', 'r',
                      encoding='utf8')
         file = [removeAccents(line) for line in g.readlines()]
-        wynik = filling(file)
+        wynik = filling(file, Faktura)
         g.close()
-        if not wynik.data_wystawienia and wynik.data_sprzedazy:
-            wynik.data_wystawienia = wynik.data_sprzedazy
+        if not wynik.wystawienie and wynik.sprzedaz:
+            wynik.wystawienie = wynik.sprzedaz
+        if not wynik.sprzedaz and wynik.wystawienie:
+            wynik.sprzedaz = wynik.wystawienie
         return render_template('upload.html', filename=filename, numer=str(wynik.numer), nazwa=str(wynik.nabywca),
-                               sprzedawca=str(wynik.sprzedawca), data_wystawienia=wynik.data_wystawienia,
-                               data_sprzedazy=wynik.data_sprzedazy, stawka=str(wynik.stawka), kwota=str(wynik.kwota))
+                               sprzedawca=str(wynik.sprzedawca), data_wystawienia=wynik.wystawienie,
+                               data_sprzedazy=wynik.sprzedaz, stawka=str(wynik.stawka), kwota=str(wynik.kwota))
     else:
         flash('Allowed image types are -> png, jpg, jpeg, gif, pdf')
         return redirect(request.url)

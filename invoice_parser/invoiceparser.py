@@ -1,175 +1,170 @@
-# import jsonpickle
 import re
 import os
 import collections
 import nltk
 from itertools import islice
-from .parsed_object import Wyniki  # , ApiClient
 from .UiPath_robots.robot_paths import checkNIP
 
+path = r'C:/Users\Mateusz/flask-invoiceapp/invoice_parser/UiPath_robots/NIP/'
 
-def numberParse(file):
+
+def generalParser(file):
+    number = None
+    stake = None
+    amount = None
+    issue_date = None
+    sale_date = None
     flag = False
-    numer = None
     threshold = 0.57
+    integers_as_strings = []
+    integers = []
+    words = []
 
     for line in file:
-        for word in line.lower().split():
-            if flag:
-                if word[0].isdigit() or sum(c.isdigit() for c in word) / len(word.replace('/', '')) > threshold:
-                    numer = word.replace(',', '')
-                    break
-            else:
-                if nltk.edit_distance('faktura', word) < 4:
-                    flag = True
-        if numer:
-            break
-    return numer
 
+        if not stake:
+            if '%' in line:
+                matches = re.search(r'\d{1,2}%', line)
+                if matches:
+                    stake = str(matches.group())
 
-def datesParse(file):
-    data_wystawienia = None
-    data_sprzedazy = None
+        if not issue_date or not sale_date:
+            matches2 = re.search(r'\d{2}[:./-]\d{2}[:./-]\d{4}|\d{4}[:./-]\d{2}[:./-]\d{2}', line)
+            if matches2:
+                for word in line.strip().lower().split():
+                    if nltk.edit_distance('wystawienia', word) < 4:
+                        issue_date = matches2.group()
+                    elif nltk.edit_distance('sprzedazy', word) < 4:
+                        sale_date = matches2.group()
 
-    for line in file:
-        matches = re.search(r'\d{2}[:./-]\d{2}[:./-]\d{4}|\d{4}[:./-]\d{2}[:./-]\d{2}', line)
-        if matches:
-            for word in line.strip().lower().split():
-                if nltk.edit_distance('wystawienia', word) < 4:
-                    data_wystawienia = matches.group()
-                elif nltk.edit_distance('sprzedazy', word) < 4:
-                    data_sprzedazy = matches.group()
-    return data_wystawienia, data_sprzedazy
+        if not number:
+            for word in line.lower().split():
+                if flag:
+                    try:
+                        if word[0].isdigit() or sum(c.isdigit() for c in word) / len(word.replace('/', '')) > threshold:
+                            number = word.replace(',', '')
+                    except ZeroDivisionError:
+                        continue
+                else:
+                    if nltk.edit_distance('faktura', word) < 4:
+                        flag = True
 
+        for word in line.split():
+            words.append(word.strip().lower())
+            match = re.search(r',\d{2}', word)
+            try:
+                if match:
+                    integers.append(float(word.strip().lower().replace(',', '.')))
+                    integers_as_strings.append(word.strip().lower())
+            except ValueError:
+                continue
 
-def stakeParse(file):
-    match = None
-    zgodna = None
-    mozliwe_stawki = ['23%', '8%', '5%', '0%']
-    for line in file:
-        if '%' in line:
-            matches = re.search(r'\d{1,2}%', line)
-            if matches:
-                match = str(matches.group())
-    if match in mozliwe_stawki:
-        zgodna = True
-    return match, zgodna
+    ending_amounts = [item for item, count in collections.Counter(integers_as_strings).items() if count > 1]
+    if ending_amounts:
+        amount = max(ending_amounts)
+
+    return {"number": number, "issue_date": issue_date, "sale_date": sale_date, "stake": stake, "amount": amount}
 
 
 def nipParse(file):
-    nipy = []
-    nipy_org = []
+    nips = []
+    nips_org = []
     for line in file:
         matches = re.findall(r'\d{3}-\d{3}-\d{2}-\d{2}|\d{3}-\d{2}-\d{2}-\d{3}|\d{10}', line)
         if matches and 'nip' in line.lower():
             for match in matches:
-                nipy_org.append(match)
-                nipy.append(int(match.replace('-', '')))
-    nips = list(set(nipy))
-    with open(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\nip.txt', 'w+') as h:
+                nips_org.append(match)
+                nips.append(int(match.replace('-', '')))
+    nips = list(set(nips))
+    with open(f'{path}nip.txt', 'w+') as f:
         if nips:
             for nip in nips:
-                h.write(str(nip) + '\n')
+                f.write(str(nip) + '\n')
     try:
-        if not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(
-                str(nips[0]).strip())) or \
-                not os.path.isfile(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(
-                    str(nips[1]).strip())):
+        if not os.path.isfile(f'{path}{str(nips[0]).strip()}.txt') or not os.path.isfile(f'{path}{str(nips[1]).strip()}.txt'):
             os.system(checkNIP)
     except IndexError:
         pass
-    return nipy_org
+    return nips_org
 
 
-def amountParse(file):
-    liczby_calkowite = []
-    liczby_calkowite_str = []
-    slowa = []
-    for line in file:
-        for word in line.split():
-            slowa.append(word.strip().lower())
-            match = re.search(r',\d{2}', word)
-            try:
-                if match:
-                    liczby_calkowite.append(float(word.strip().lower().replace(',', '.')))
-                    liczby_calkowite_str.append(word.strip().lower())
-            except ValueError:
-                continue
-    koncowki_kwot = [item for item, count in collections.Counter(liczby_calkowite_str).items() if count > 1]
-    if koncowki_kwot:
-        return max(koncowki_kwot)
-
-
-def dane_z_wyszukiwarki(identyfikator):
-    dane_firmy = []
-    dane_firmy_surowe = []
+def dataGUS(tax_id):
+    company_data = []
+    company_raw_data = []
     try:
-        with open(r'C:\Users\Mateusz\flask-invoiceapp\invoice_parser\UiPath_robots\NIP\{}.txt'.format(identyfikator), 'r', encoding='utf8') as file:
+        with open(f'{path}{tax_id}.txt', 'r', encoding='utf8') as file:
             for line in file.readlines():
-                dane_firmy_surowe.append(line.strip())
-                dane_firmy.append(line.lower().strip().replace(' ', ''))
-        return dane_firmy_surowe
+                company_raw_data.append(line.strip())
+                company_data.append(line.lower().strip().replace(' ', ''))
+        return company_raw_data
     except FileNotFoundError:
-        print("Nie znaleziono danych firmy po nipie!")
+        print(f"Nie znaleziono danych firmy po nipie: {tax_id}!")
         return None
 
 
-def podmiot_z_nipu(file):
-    nipy = nipParse(file)
-    indeks_sprzedawcy = None
-    indeks_nabywcy = None
-    indeks_nipu_0 = None
-    indeks_nipu_1 = None
-    nip_sprzedawcy = None
-    nip_nabywcy = None
-    if len(nipy) > 1:
+def entityGUS(file):
+    nips = nipParse(file)
+    sellex_idx = None
+    buyer_idx = None
+    nip0_idx = None
+    nip1_idx = None
+    seller_nip = None
+    buyer_nip = None
+    if len(nips) > 1:
         for nr, element in enumerate(file):
             if "sprzedawca" in element.lower():
-                indeks_sprzedawcy = nr
+                sellex_idx = nr
             if "nabywca" in element.lower():
-                indeks_nabywcy = nr
-            if nipy[0] in element.lower():
-                indeks_nipu_0 = nr
-            if nipy[1] in element.lower():
-                indeks_nipu_1 = nr
-        indeks_nip_sprzedawcy = indeks_sprzedawcy + min(abs(indeks_sprzedawcy - indeks_nipu_0),
-                                                        abs(indeks_sprzedawcy - indeks_nipu_1))
-        indeks_nip_nabywcy = indeks_nabywcy + min(abs(indeks_nabywcy - indeks_nipu_0),
-                                                  abs(indeks_nabywcy - indeks_nipu_1))
-        if indeks_nip_sprzedawcy == indeks_nipu_0:
-            nip_sprzedawcy = nipy[0]
-        else:
-            nip_sprzedawcy = nipy[1]
-
-        if indeks_nip_nabywcy == indeks_nipu_0:
-            nip_nabywcy = nipy[0]
-        else:
-            nip_nabywcy = nipy[1]
-
-        if nip_nabywcy == nip_sprzedawcy:
-            nip_sprzedawcy = nipy[1]
-            if nip_nabywcy == nip_sprzedawcy:
-                nip_sprzedawcy = nipy[0]
-    elif len(nipy) == 1:
-        nip_sprzedawcy = nipy[0]
-        dane_sprzedawcy = dane_z_wyszukiwarki(nip_sprzedawcy.replace('-', ''))
-        dane_sprzedawcy.append(nip_sprzedawcy.replace('-', ''))
-        return {"sprzedawca": dane_sprzedawcy, "nabywca": None}
-    if nip_sprzedawcy is not None and nip_nabywcy is not None:
-        dane_sprzedawcy = dane_z_wyszukiwarki(nip_sprzedawcy.replace('-', ''))
-        dane_nabywcy = dane_z_wyszukiwarki(nip_nabywcy.replace('-', ''))
+                buyer_idx = nr
+            if nips[0] in element.lower():
+                nip0_idx = nr
+            if nips[1] in element.lower():
+                nip1_idx = nr
         try:
-            dane_sprzedawcy.append(nip_sprzedawcy.replace('-', ''))
-        except AttributeError:
-            dane_sprzedawcy = None
+            seller_nip_idx = sellex_idx + min(abs(sellex_idx - nip0_idx), abs(sellex_idx - nip1_idx))
+        except TypeError:
+            seller_nip_idx = None
         try:
-            dane_nabywcy.append(nip_nabywcy.replace('-', ''))
+            buyer_nip_idx = buyer_idx + min(abs(buyer_idx - nip0_idx), abs(buyer_idx - nip1_idx))
+        except TypeError:
+            buyer_nip_idx = None
+
+        if seller_nip_idx == nip0_idx:
+            seller_nip = nips[0]
+        else:
+            seller_nip = nips[1]
+
+        if buyer_nip_idx == nip0_idx:
+            buyer_nip = nips[0]
+        else:
+            buyer_nip = nips[1]
+
+        if buyer_nip == seller_nip:
+            seller_nip = nips[1]
+            if buyer_nip == seller_nip:
+                seller_nip = nips[0]
+    elif len(nips) == 1:
+        seller_nip = nips[0]
+        seller_data = dataGUS(seller_nip.replace('-', ''))
+        seller_data.append(seller_nip.replace('-', ''))
+        return {"sprzedawca": seller_data, "nabywca": None}
+    if seller_nip is not None and buyer_nip is not None:
+        seller_data = dataGUS(seller_nip.replace('-', ''))
+        buyer_data = dataGUS(buyer_nip.replace('-', ''))
+        try:
+            seller_data.append(seller_nip.replace('-', ''))
         except AttributeError:
-            dane_nabywcy = None
-        return {"sprzedawca": dane_sprzedawcy, "nabywca": dane_nabywcy}
+            seller_data = None
+        try:
+            buyer_data.append(buyer_nip.replace('-', ''))
+        except AttributeError:
+            buyer_data = None
+        return {"seller": seller_data, "buyer": buyer_data}
+    else:
+        return {"sprzedawca": None, "nabywca": None}
 
 
-def dostawca_z_ocr(file):
+def buyerOCR(file):
     nabywca = None
     for idx, line in enumerate(file):
         if 'nabywca' in line.lower():
@@ -177,7 +172,7 @@ def dostawca_z_ocr(file):
     return nabywca
 
 
-def sprzedawca_z_ocr(file):
+def sellerOCR(file):
     sprzedawca = None
     for idx, line in enumerate(file):
         if 'sprzedawca' in line.lower():
@@ -185,30 +180,15 @@ def sprzedawca_z_ocr(file):
     return sprzedawca
 
 
-def filling(file):
-    # os.makedirs(os.path.dirname('parsed_successful/'), exist_ok=True)
-
-    wynik = Wyniki()
-    wynik.data_wystawienia, wynik.data_sprzedazy = datesParse(file)
-    wynik.numer = numberParse(file)
-    wynik.stawka = stakeParse(file)[0]
-    wynik.kwota = amountParse(file)
-
-    kurwa_sprzedajacy = podmiot_z_nipu(file)
-    if kurwa_sprzedajacy['sprzedawca']:
-        wynik.sprzedawca = '\n'.join(kurwa_sprzedajacy["sprzedawca"])
-    else:
-        wynik.sprzedawca = sprzedawca_z_ocr(file)
-
-    if kurwa_sprzedajacy["nabywca"]:
-        wynik.nabywca = '\n'.join(kurwa_sprzedajacy["nabywca"])
-    else:
-        wynik.nabywca = dostawca_z_ocr(file)
-
-    # apiclient = ApiClient()
-    # writeRes = jsonpickle.encode(apiclient.sanitize_for_serialization(wynik), unpicklable=False)
-    # writeRes = writeRes.encode('utf-8')
-
-    # with open('parsed_successful/' + str(wynik.numer).replace('/', '') + '.json', 'wb') as g:
-    #     g.write(writeRes)
-    return wynik
+def filling(file, invoice):
+    result = generalParser(file)
+    entity = entityGUS(file)
+    return invoice(
+        numer=result.get("number"),
+        kwota=result.get("amount"),
+        stawka=result.get("stake"),
+        sprzedaz=result.get("sale_date"),
+        wystawienie=result.get("issue_date"),
+        sprzedawca='\n'.join(entity.get("seller")) if entity.get("seller") else sellerOCR(file),
+        nabywca='\n'.join(entity.get("buyer")) if entity.get("buyer") else buyerOCR(file)
+    )
